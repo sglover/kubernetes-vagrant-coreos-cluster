@@ -77,7 +77,7 @@ DOCKER_OPTIONS = ENV['DOCKER_OPTIONS'] || ''
 
 KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '1.6.2'
 
-CHANNEL = ENV['CHANNEL'] || 'alpha'
+CHANNEL = ENV['CHANNEL'] || 'stable'
 #if CHANNEL != 'alpha'
 #  puts "============================================================================="
 #  puts "As this is a fastly evolving technology CoreOS' alpha channel is the only one"
@@ -363,6 +363,35 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             info "Kubernetes dashboard will be available at http://#{MASTER_IP}:8080/ui"
           end
 
+#          if OS.windows?
+#            run_remote "docker load -i /home/core/stratoss-conductor.tar.gz"
+#          else
+#            system "docker load -i stratoss-conductor.tar.gz"
+#          end
+
+          kHost.vm.provision :shell,
+          inline: <<-EOF
+            docker load -i /vagrant/dockerimages/stratoss-conductor.tar.gz
+            docker tag stratoss-conductor:0.2.0-SNAPSHOT localhost:5000/stratoss-conductor:0.2.0-SNAPSHOT
+            docker push localhost:5000/stratoss-conductor:0.2.0-SNAPSHOT
+
+            docker load -i /vagrant/dockerimages/stratoss-catalog.tar.gz
+            docker tag stratoss-catalog:0.2.0-SNAPSHOT localhost:5000/stratoss-catalog:0.2.0-SNAPSHOT
+            docker push localhost:5000/stratoss-catalog:0.2.0-SNAPSHOT
+
+            docker load -i /vagrant/dockerimages/stratoss-topology.tar.gz
+            docker tag stratoss-topology:0.2.0-SNAPSHOT localhost:5000/stratoss-topology:0.2.0-SNAPSHOT
+            docker push localhost:5000/stratoss-topology:0.2.0-SNAPSHOT
+
+            docker load -i /vagrant/dockerimages/stratoss-orchestrator.tar.gz
+            docker tag stratoss-orchestrator:0.2.0-SNAPSHOT localhost:5000/stratoss-orchestrator:0.2.0-SNAPSHOT
+            docker push localhost:5000/stratoss-orchestrator:0.2.0-SNAPSHOT
+
+            docker load -i /vagrant/dockerimages/stratoss-ops.tar.gz
+            docker tag stratoss-ops:0.2.0-SNAPSHOT localhost:5000/stratoss-ops:0.2.0-SNAPSHOT
+            docker push localhost:5000/stratoss-ops:0.2.0-SNAPSHOT
+          EOF
+
         end
 
         # copy setup files to master vm if host is windows
@@ -370,6 +399,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+
+#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "scripts/docker-setup.sh"), :destination => "/home/core/docker-setup.sh"
+
+#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-conductor.tar.gz"), :destination => "/home/core/stratoss-conductor.tar.gz"
+#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-catalog.tar.gz"), :destination => "/home/core/stratoss-catalog.tar.gz"
+#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-orchestrator.tar.gz"), :destination => "/home/core/stratoss-orchestrator.tar.gz"
+#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-topology.tar.gz"), :destination => "/home/core/stratoss-topology.tar.gz"
+#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-ops.tar.gz"), :destination => "/home/core/stratoss-ops.tar.gz"
 
           if USE_KUBE_UI
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-controller.yaml"), :destination => "/home/core/dashboard-controller.yaml"

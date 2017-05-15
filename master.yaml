@@ -61,13 +61,29 @@ coreos:
         - name: 50-docker-options.conf
           content: |
             [Service]
-            Environment='DOCKER_OPTS=--storage-driver=overlay2 __DOCKER_OPTIONS__'
+            Environment='DOCKER_OPTS=--storage-driver=overlay2 --insecure-registry="localhost:5000" __DOCKER_OPTIONS__'
     - name: early-docker.service
       drop-ins:
         - __PROXY_LINE__name: http-proxy.conf
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]
             __PROXY_LINE__EnvironmentFile=/etc/environment
+
+    - name: private-docker-registry.service
+      command: start
+      runtime: true
+      content: |
+       [Unit]
+       Description=Docker Private Registry
+       After=docker.service
+       Requires=docker.service
+       Requires=network-online.target
+       After=network-online.target
+
+       [Service]
+       ExecStartPre=/usr/bin/docker pull registry:latest
+       ExecStart=/usr/bin/docker run --name private-docker-registry --privileged -e SETTINGS_FLAVOR=s3 -e AWS_BUCKET=bucket -e AWS_KEY=awskey -e AWS_SECRET=awssecret -e SEARCH_BACKEND=sqlalchemy -p 5000:5000 registry:latest
+
     - name: kube-certs.service
       command: start
       content: |
