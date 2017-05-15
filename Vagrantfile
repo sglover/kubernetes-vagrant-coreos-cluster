@@ -331,7 +331,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
           end
 
-          if USE_KUBE_UI
+#          if USE_KUBE_UI
             info "Configuring Kubernetes dashboard..."
 
             res, uri.path = nil, '/api/v1/namespaces/kube-system/replicationcontrollers/kubernetes-dashboard'
@@ -361,7 +361,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
 
             info "Kubernetes dashboard will be available at http://#{MASTER_IP}:8080/ui"
-          end
+#          end
 
 #          if OS.windows?
 #            run_remote "docker load -i /home/core/stratoss-conductor.tar.gz"
@@ -369,28 +369,47 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 #            system "docker load -i stratoss-conductor.tar.gz"
 #          end
 
-          kHost.vm.provision :shell,
-          inline: <<-EOF
-            docker load -i /vagrant/dockerimages/stratoss-conductor.tar.gz
-            docker tag stratoss-conductor:0.2.0-SNAPSHOT localhost:5000/stratoss-conductor:0.2.0-SNAPSHOT
-            docker push localhost:5000/stratoss-conductor:0.2.0-SNAPSHOT
+            if OS.windows?
+              run_remote "docker load -i /vagrant/dockerimages/stratoss-conductor.tar.gz"
+              run_remote "docker tag stratoss-conductor:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-conductor:0.2.0-SNAPSHOT"
+              run_remote "docker push 172.17.8.101:5000/stratoss-conductor:0.2.0-SNAPSHOT"
 
-            docker load -i /vagrant/dockerimages/stratoss-catalog.tar.gz
-            docker tag stratoss-catalog:0.2.0-SNAPSHOT localhost:5000/stratoss-catalog:0.2.0-SNAPSHOT
-            docker push localhost:5000/stratoss-catalog:0.2.0-SNAPSHOT
+              run_remote "docker load -i /vagrant/dockerimages/stratoss-catalog.tar.gz"
+              run_remote "docker tag stratoss-catalog:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-catalog:0.2.0-SNAPSHOT"
+              run_remote "docker push 172.17.8.101:5000/stratoss-catalog:0.2.0-SNAPSHOT"
 
-            docker load -i /vagrant/dockerimages/stratoss-topology.tar.gz
-            docker tag stratoss-topology:0.2.0-SNAPSHOT localhost:5000/stratoss-topology:0.2.0-SNAPSHOT
-            docker push localhost:5000/stratoss-topology:0.2.0-SNAPSHOT
+              run_remote "docker load -i /vagrant/dockerimages/stratoss-topology.tar.gz"
+              run_remote "docker tag stratoss-topology:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-topology:0.2.0-SNAPSHOT"
+              run_remote "docker push 172.17.8.101:5000/stratoss-topology:0.2.0-SNAPSHOT"
 
-            docker load -i /vagrant/dockerimages/stratoss-orchestrator.tar.gz
-            docker tag stratoss-orchestrator:0.2.0-SNAPSHOT localhost:5000/stratoss-orchestrator:0.2.0-SNAPSHOT
-            docker push localhost:5000/stratoss-orchestrator:0.2.0-SNAPSHOT
+              run_remote "docker load -i /vagrant/dockerimages/stratoss-orchestrator.tar.gz"
+              run_remote "docker tag stratoss-orchestrator:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-orchestrator:0.2.0-SNAPSHOT"
+              run_remote "docker push 172.17.8.101:5000/stratoss-orchestrator:0.2.0-SNAPSHOT"
 
-            docker load -i /vagrant/dockerimages/stratoss-ops.tar.gz
-            docker tag stratoss-ops:0.2.0-SNAPSHOT localhost:5000/stratoss-ops:0.2.0-SNAPSHOT
-            docker push localhost:5000/stratoss-ops:0.2.0-SNAPSHOT
-          EOF
+              run_remote "docker load -i /vagrant/dockerimages/stratoss-ops.tar.gz"
+              run_remote "docker tag stratoss-ops:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-ops:0.2.0-SNAPSHOT"
+              run_remote "docker push 172.17.8.101:5000/stratoss-ops:0.2.0-SNAPSHOT"
+            else
+              system "docker load -i /vagrant/dockerimages/stratoss-conductor.tar.gz"
+              system "docker tag stratoss-conductor:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-conductor:0.2.0-SNAPSHOT"
+              system "docker push 172.17.8.101:5000/stratoss-conductor:0.2.0-SNAPSHOT"
+
+              system "docker load -i /vagrant/dockerimages/stratoss-catalog.tar.gz"
+              system "docker tag stratoss-catalog:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-catalog:0.2.0-SNAPSHOT"
+              system "docker push 172.17.8.101:5000/stratoss-catalog:0.2.0-SNAPSHOT"
+
+              system "docker load -i /vagrant/dockerimages/stratoss-topology.tar.gz"
+              system "docker tag stratoss-topology:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-topology:0.2.0-SNAPSHOT"
+              system "docker push 172.17.8.101:5000/stratoss-topology:0.2.0-SNAPSHOT"
+
+              system "docker load -i /vagrant/dockerimages/stratoss-orchestrator.tar.gz"
+              system "docker tag stratoss-orchestrator:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-orchestrator:0.2.0-SNAPSHOT"
+              system "docker push 172.17.8.101:5000/stratoss-orchestrator:0.2.0-SNAPSHOT"
+
+              system "docker load -i /vagrant/dockerimages/stratoss-ops.tar.gz"
+              system "docker tag stratoss-ops:0.2.0-SNAPSHOT 172.17.8.101:5000/stratoss-ops:0.2.0-SNAPSHOT"
+              system "docker push 172.17.8.101:5000/stratoss-ops:0.2.0-SNAPSHOT"
+            end
 
         end
 
@@ -400,18 +419,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
 
-#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "scripts/docker-setup.sh"), :destination => "/home/core/docker-setup.sh"
-
-#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-conductor.tar.gz"), :destination => "/home/core/stratoss-conductor.tar.gz"
-#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-catalog.tar.gz"), :destination => "/home/core/stratoss-catalog.tar.gz"
-#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-orchestrator.tar.gz"), :destination => "/home/core/stratoss-orchestrator.tar.gz"
-#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-topology.tar.gz"), :destination => "/home/core/stratoss-topology.tar.gz"
-#          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dockerimages/stratoss-ops.tar.gz"), :destination => "/home/core/stratoss-ops.tar.gz"
-
-          if USE_KUBE_UI
+#          if USE_KUBE_UI
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-controller.yaml"), :destination => "/home/core/dashboard-controller.yaml"
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-service.yaml"), :destination => "/home/core/dashboard-service.yaml"
-          end
+#          end
         end
 
         # clean temp directory after master is destroyed
